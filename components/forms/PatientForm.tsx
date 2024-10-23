@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import CustomFormField from "../CustomFormField"
 import SubmitButton from "../SubmitButton"
@@ -38,17 +37,43 @@ const PatientForm = () => {
     },
   })
 
-  async function onSubmit({ name, email, phone }: z.infer<typeof UserFormValidation>) {
-    setIsLoading(true)
+  // async function onSubmit({ name, email, phone }: z.infer<typeof UserFormValidation>) {
+  //   setIsLoading(true)
+
+  //   try {
+  //     const userData = { name, email, phone }
+  //     const user = await createUser(userData)
+  //     if (user) router.push(`/patients/${user.$id}/register`)
+  //   } catch (e) {
+  //     console.error(e)
+  //   } finally {
+  //     setIsLoading(false)
+  //   }
+  // }
+
+  const onSubmit = async (values: z.infer<typeof UserFormValidation>) => {
+    setIsLoading(true);
 
     try {
-      const userData = { name, email, phone }
-      const user = await createUser(userData)
-      if (user) router.push(`/patients/${user.$id}/register`)
-    } catch (e) {
-      console.error(e)
-    } finally { }
-  }
+      const user = {
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+      };
+
+      console.log('going in')
+      const newUser = await createUser(user);
+
+      if (newUser) {
+        router.push(`/patients/${newUser.$id}/register`);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+
+    setIsLoading(false);
+  };
+
 
   return (
     <Form {...form}>
