@@ -1,3 +1,6 @@
+// "use client"
+// TODO: check client
+
 import { convertFileToUrl } from '@/lib/utils'
 import Image from 'next/image'
 import { useCallback } from 'react'
