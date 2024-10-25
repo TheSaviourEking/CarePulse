@@ -1,7 +1,7 @@
 import RegisterForm from '@/components/forms/RegisterForm'
+// import { default as RegisterForm2 } from '@/components/forms/RegisterFormm'
 import { getUser } from '@/lib/actions/patient.actions'
 import Image from 'next/image'
-import Link from 'next/link'
 import React from 'react'
 
 const Register = async ({ params: { userId } }: SearchParamProps) => {
@@ -13,7 +13,8 @@ const Register = async ({ params: { userId } }: SearchParamProps) => {
                     <Image src={'/assets/icons/logo-full.svg'} alt="patient" height={1000} width={1000} className="mb-12 h-10 w-fit" />
 
                     <RegisterForm user={user} />
-                    
+                    {/* <RegisterForm2 user={user} /> */}
+
                     <p className="justify-items-center text-dark-600 xl:text-left copyright py-12">&copy; 2024 CarePulse</p>
                 </div>
             </section>
