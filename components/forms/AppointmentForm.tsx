@@ -15,9 +15,13 @@ import { DOCTORS } from "@/constants"
 import { SelectItem } from "../ui/select"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
-import { createAppointment } from "@/lib/actions/appoinment.actions"
+import { createAppointment, updateAppointment } from "@/lib/actions/appoinment.actions"
+import { Appointment } from "@/types/appwrite.types"
 
-const AppointmentForm = ({ type, userId, patientId }: { userId: string, patientId: string, type: 'create' | "cancel" | 'schedule' }) => {
+const AppointmentForm = ({ type, userId, patientId, appointment, setOpen }: {
+    userId: string, patientId: string, type: 'create' | "cancel" | 'schedule',
+    appointment?: Appointment, setOpen: (open: boolean) => void,
+}) => {
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
 
@@ -26,11 +30,11 @@ const AppointmentForm = ({ type, userId, patientId }: { userId: string, patientI
     const form = useForm<z.infer<typeof AppointmentFormValidation>>({
         resolver: zodResolver(AppointmentFormValidation),
         defaultValues: {
-            primaryPhysician: "",
-            schedule: new Date(),
-            reason: '',
-            note: '',
-            cancellationReason: ''
+            primaryPhysician: appointment ? appointment.primaryPhysician : '',
+            schedule: appointment ? new Date(appointment?.schedule) : new Date(Date.now()),
+            reason: appointment ? appointment.reason : '',
+            note: appointment ? appointment.note : '',
+            cancellationReason: appointment?.cancellationReason || ''
         },
     })
 
@@ -46,9 +50,6 @@ const AppointmentForm = ({ type, userId, patientId }: { userId: string, patientI
             case 'cancel':
                 status = 'cancelled';
                 break;
-            // case 'create':
-            //     status = 'created';
-            //     break;
             default:
                 status = 'pending';
                 break;
@@ -69,6 +70,25 @@ const AppointmentForm = ({ type, userId, patientId }: { userId: string, patientI
                 if (appointment) {
                     form.reset();
                     router.push(`/patients/${userId}/new-appointment/success?appointmentId=${appointment.$id}`)
+                }
+            } else {
+                const appoinmentToUpdate = {
+                    userId, appointmentId: appointment.$id!,
+                    appointment: {
+                        primaryPhysician: values?.primaryPhysician,
+                        schedule: new Date(values?.schedule),
+                        status: status as Status,
+                        cancellationReason: values?.cancellationReason,
+                    },
+                    type
+                }
+
+                const updatedAppointment = await updateAppointment(appoinmentToUpdate);
+
+                if (updatedAppointment) {
+                    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+                    setOpen && setOpen(false);
+                    form.reset();
                 }
             }
         } catch (e) {
@@ -98,10 +118,12 @@ const AppointmentForm = ({ type, userId, patientId }: { userId: string, patientI
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 flex-1">
 
-                <section className="mb-12 space-y-4">
-                    <h1 className="header">New Appointment</h1>
-                    <p className="text-dark-700">Request A New Appointment in 10 seconds</p>
-                </section>
+                {type === 'create' && (
+                    <section className="mb-12 space-y-4">
+                        <h1 className="header">New Appointment</h1>
+                        <p className="text-dark-700">Request A New Appointment in 10 seconds</p>
+                    </section>
+                )}
 
                 {type !== 'cancel' && (
                     <>
