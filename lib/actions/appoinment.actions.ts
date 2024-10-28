@@ -55,7 +55,7 @@ export const getRecentAppointmentList = async () => {
     } catch (error) { console.error(error) }
 }
 
-export const updateAppointment = async ({ appointmentId, userId, appointment, type }: UpdateAppointmentParams) => {
+export const updateAppointment = async ({ appointmentId, userId, appointment, type, timeZone }: UpdateAppointmentParams) => {
     try {
         const updatedAppointment = await databases.updateDocument(
             DATABASE_ID!, APPOINTMENT_COLLECTION_ID!, appointmentId, appointment
@@ -69,13 +69,19 @@ export const updateAppointment = async ({ appointmentId, userId, appointment, ty
         const patient = await getUser(userId);
 
         // SMS notification
+        // const smsMessage = `
+        //     Hi, ${patient.name} it's CarePulse.
+        //     ${type === 'schedule'
+        //             ? `Your appointment has been scheduled for ${formatDateTime(appointment.schedule!).dateTime} with Dr. ${appointment.primaryPhysician}.`
+        //             : `We regret to inform you that your appointment has been cancelled for the following reason: ${appointment.cancellationReason}`
+        //         };
+        //     `;
+
         const smsMessage = `
-        Hi, ${patient.name} it's CarePulse.
-        ${type === 'schedule'
-                ? `Your appointment has been scheduled for ${formatDateTime(appointment.schedule!).dateTime} with Dr. ${appointment.primaryPhysician}.`
-                : `We regret to inform you that your appointment has been cancelled for the following reason: ${appointment.cancellationReason}`
-            };
-            `
+        Hi , ${patient.name}, greetings form CarePulse.
+        ${type === 'schedule' ? `Your appointment is confirmed for ${formatDateTime(appointment.schedule!, timeZone!).dateTime} with Dr. ${appointment.primaryPhysician}` : `We regret to inform that your appointment for ${formatDateTime(appointment.schedule!, timeZone).dateTime} is cancelled.
+        Reason: ${appointment.cancellationReason}`}
+        `;
 
         await sendSMSNotification(userId, smsMessage);
         revalidatePath('/admin');
